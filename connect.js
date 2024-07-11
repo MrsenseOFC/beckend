@@ -1,11 +1,15 @@
 import mysql from 'mysql';
+import dotenv from 'dotenv';
+
+// Carregar variáveis de ambiente do arquivo .env
+dotenv.config();
 
 // Crie a conexão com o banco de dados
 export const db = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "40028922",
-    database: "plataforma",
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
 });
 
 // Conectar ao banco de dados
