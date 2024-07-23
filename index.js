@@ -19,7 +19,7 @@ const app = express();
 
 // Configuração de CORS
 const corsOptions = {
-  origin: 'http://localhost:5173',
+  origin: 'https://oficial-dvgv.onrender.com',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization', 'userid'],
   credentials: true,
