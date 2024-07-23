@@ -8,24 +8,47 @@ import universityProfilesRoutes from './routes/universityProfiles.js';
 import scoutProfilesRoutes from './routes/scoutProfiles.js';
 import opportunitiesRoutes from './routes/opportunities.js';
 import eventsRoutes from './routes/events.js';
-import playerProfilesRoutes from './routes/playerProfiles.js'; // Importando as rotas de perfis de jogadores
+import playerProfilesRoutes from './routes/playerProfiles.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import morgan from 'morgan';
 
 const app = express();
+
+// Configuração de CORS
+const corsOptions = {
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'userid'],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+
+// Middleware de segurança
+app.use(helmet());
+
+// Middleware de logging
+app.use(morgan('combined'));
+
+// Middleware para limitar taxas de requisição
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // Limitar a 100 requisições por IP por janela de tempo
+});
+app.use(limiter);
 
 // Middleware para analisar o corpo das solicitações como JSON
 app.use(express.json());
 
-// Configuração do CORS para permitir todas as origens, métodos e headers simples
-app.use(cors());
-
 // Middleware para analisar cookies
 app.use(cookieParser());
 
-// Rotas para diferentes endpoints
+// Rotas
 app.use('/api/users', userRoutes);
-app.use('/api/auth', authRoutes); // Rota de autenticação
+app.use('/api/auth', authRoutes);
 app.use('/api/clubs', clubProfilesRoutes);
 app.use('/api/userVideos', userVideosRoutes);
 app.use('/api/userPhotos', userPhotosRoutes);
@@ -33,7 +56,7 @@ app.use('/api/universities', universityProfilesRoutes);
 app.use('/api/scouts', scoutProfilesRoutes);
 app.use('/api/opportunities', opportunitiesRoutes);
 app.use('/api/events', eventsRoutes);
-app.use('/api/playerProfiles', playerProfilesRoutes); // Adicionando a rota de perfis de jogadores
+app.use('/api/playerProfiles', playerProfilesRoutes);
 
 // Middleware para tratamento de erros
 app.use((err, req, res, next) => {

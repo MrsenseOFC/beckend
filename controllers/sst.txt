@@ -1,0 +1,9 @@
+import express from 'express';
+import { uploadProfilePicture, getProfilePicture } from '../controllers/userPhotosController.js';
+
+const router = express.Router();
+
+router.post('/upload', uploadProfilePicture); // Rota para upload da imagem
+router.get('/:userId', getProfilePicture);    // Rota para obter a imagem do perfil
+
+export default router;

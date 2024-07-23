@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { db } from '../connect.js';
 
@@ -69,5 +69,13 @@ export const loginUser = (req, res) => {
         profile_type: user.profile_type,
       }
     });
+  });
+};
+
+// Logout de Usuário
+export const logoutUser = (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Logout realizado com sucesso'
   });
 };
