@@ -11,38 +11,18 @@ import eventsRoutes from './routes/events.js';
 import playerProfilesRoutes from './routes/playerProfiles.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import morgan from 'morgan';
 
 const app = express();
 
-// Configuração de CORS
+// Configuração do CORS para permitir a origem específica
 const corsOptions = {
-  origin: 'https://oficial-dvgv.onrender.com', // Frontend origin
+  origin: 'https://oficial-dvgv.onrender.com',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'userid'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 };
 
-// Enable CORS for all routes
 app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options('*', cors(corsOptions));
-
-// Middleware de segurança
-app.use(helmet());
-
-// Middleware de logging
-app.use(morgan('combined'));
-
-// Middleware para limitar taxas de requisição
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // Limitar a 100 requisições por IP por janela de tempo
-});
-app.use(limiter);
 
 // Middleware para analisar o corpo das solicitações como JSON
 app.use(express.json());
@@ -50,9 +30,9 @@ app.use(express.json());
 // Middleware para analisar cookies
 app.use(cookieParser());
 
-// Rotas
+// Rotas para diferentes endpoints
 app.use('/api/users', userRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes); // Rota de autenticação
 app.use('/api/clubs', clubProfilesRoutes);
 app.use('/api/userVideos', userVideosRoutes);
 app.use('/api/userPhotos', userPhotosRoutes);
@@ -60,7 +40,7 @@ app.use('/api/universities', universityProfilesRoutes);
 app.use('/api/scouts', scoutProfilesRoutes);
 app.use('/api/opportunities', opportunitiesRoutes);
 app.use('/api/events', eventsRoutes);
-app.use('/api/playerProfiles', playerProfilesRoutes);
+app.use('/api/playerProfiles', playerProfilesRoutes); // Adicionando a rota de perfis de jogadores
 
 // Middleware para tratamento de erros
 app.use((err, req, res, next) => {
@@ -68,7 +48,7 @@ app.use((err, req, res, next) => {
   res.status(500).send('Something broke!');
 });
 
-const PORT = process.env.PORT || 8800;
+const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
   console.log(`Servidor está rodando na porta ${PORT}`);
 });
