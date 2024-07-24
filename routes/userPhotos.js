@@ -9,7 +9,9 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/photos');
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
+    // Utiliza UUID para garantir um nome único para o arquivo
+    const uniqueFilename = `${uuidv4()}-${Date.now()}-${file.originalname}`;
+    cb(null, uniqueFilename);
   },
 });
 

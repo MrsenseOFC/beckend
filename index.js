@@ -11,18 +11,22 @@ import eventsRoutes from './routes/events.js';
 import playerProfilesRoutes from './routes/playerProfiles.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import helmet from 'helmet'; // Segurança adicional
 
 const app = express();
 
 // Configuração do CORS para permitir a origem específica
 const corsOptions = {
-  origin: 'https://oficial-dvgv.onrender.com',
+  origin: ['https://oficial-dvgv.onrender.com', 'http://localhost:5173'], // Adicione outras origens se necessário
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 };
 
 app.use(cors(corsOptions));
+
+// Middleware para segurança adicional
+app.use(helmet());
 
 // Middleware para analisar o corpo das solicitações como JSON
 app.use(express.json());
@@ -44,11 +48,15 @@ app.use('/api/playerProfiles', playerProfilesRoutes); // Adicionando a rota de p
 
 // Middleware para tratamento de erros
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
+  console.error('Erro:', err.message); // Mensagem de erro mais específica
+  res.status(err.status || 500).json({
+    error: {
+      message: err.message || 'Internal Server Error',
+    },
+  });
 });
 
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 7080;
 app.listen(PORT, () => {
   console.log(`Servidor está rodando na porta ${PORT}`);
 });
