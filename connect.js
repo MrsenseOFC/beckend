@@ -1,4 +1,4 @@
-import mysql from 'mysql';
+import mysql from 'mysql2';
 import dotenv from 'dotenv';
 
 // Carregar variáveis de ambiente do arquivo .env
@@ -7,6 +7,7 @@ dotenv.config();
 // Crie a conexão com o banco de dados
 export const db = mysql.createConnection({
     host: process.env.DB_HOST,
+    port: process.env.DB_PORT, // Adicione a porta aqui
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE,
