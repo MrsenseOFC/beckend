@@ -11,13 +11,14 @@ import eventsRoutes from './routes/events.js';
 import playerProfilesRoutes from './routes/playerProfiles.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import helmet from 'helmet'; // Segurança adicional
+import helmet from 'helmet';
+import http from 'http';
 
 const app = express();
 
 // Configuração do CORS para permitir a origem específica
 const corsOptions = {
-  origin: ['https://oficial-dvgv.onrender.com', 'http://localhost:5173'], // Adicione outras origens se necessário
+  origin: ['https://oficial-dvgv.onrender.com', 'http://localhost:5173'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -28,6 +29,13 @@ app.use(cors(corsOptions));
 // Middleware para segurança adicional
 app.use(helmet());
 
+// Middleware para configurar timeout
+app.use((req, res, next) => {
+  req.setTimeout(0); // Desativa o timeout
+  res.setTimeout(0); // Desativa o timeout
+  next();
+});
+
 // Middleware para analisar o corpo das solicitações como JSON
 app.use(express.json());
 
@@ -36,7 +44,7 @@ app.use(cookieParser());
 
 // Rotas para diferentes endpoints
 app.use('/api/users', userRoutes);
-app.use('/api/auth', authRoutes); // Rota de autenticação
+app.use('/api/auth', authRoutes);
 app.use('/api/clubs', clubProfilesRoutes);
 app.use('/api/userVideos', userVideosRoutes);
 app.use('/api/userPhotos', userPhotosRoutes);
@@ -44,11 +52,11 @@ app.use('/api/universities', universityProfilesRoutes);
 app.use('/api/scouts', scoutProfilesRoutes);
 app.use('/api/opportunities', opportunitiesRoutes);
 app.use('/api/events', eventsRoutes);
-app.use('/api/playerProfiles', playerProfilesRoutes); // Adicionando a rota de perfis de jogadores
+app.use('/api/playerProfiles', playerProfilesRoutes);
 
 // Middleware para tratamento de erros
 app.use((err, req, res, next) => {
-  console.error('Erro:', err.message); // Mensagem de erro mais específica
+  console.error('Erro:', err.message);
   res.status(err.status || 500).json({
     error: {
       message: err.message || 'Internal Server Error',
@@ -57,6 +65,8 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 7320;
-app.listen(PORT, () => {
+const server = http.createServer(app);
+
+server.listen(PORT, () => {
   console.log(`Servidor está rodando na porta ${PORT}`);
 });
