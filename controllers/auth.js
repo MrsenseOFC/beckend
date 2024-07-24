@@ -21,38 +21,35 @@ export const registerUser = async (req, res) => {
     const query = 'INSERT INTO users (username, email, password, profile_type, competitive_category, plan) VALUES (?, ?, ?, ?, ?, ?)';
     db.query(query, [username, email, hashedPassword, profile_type, competitive_category, plan], (err, result) => {
       if (err) {
-        console.error('Erro ao registrar usuário:', err);
+        console.error('Erro ao registrar usuário:', err.message);
         return res.status(500).json({ error: 'Erro ao registrar usuário' });
       }
 
       res.status(201).json({ message: 'Usuário registrado com sucesso' });
     });
   } catch (error) {
-    console.error('Erro ao registrar usuário:', error);
+    console.error('Erro ao registrar usuário:', error.message);
     res.status(500).json({ error: 'Erro ao registrar usuário' });
   }
 };
 
 // Login de Usuário
-export const loginUser = (req, res) => {
+export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: 'Por favor, preencha todos os campos obrigatórios' });
   }
 
-  const query = 'SELECT * FROM users WHERE email = ?';
-  db.query(query, [email], async (err, result) => {
-    if (err) {
-      console.error('Erro ao buscar usuário:', err);
-      return res.status(500).json({ error: 'Erro ao buscar usuário' });
-    }
+  try {
+    const query = 'SELECT * FROM users WHERE email = ?';
+    const [rows] = await db.promise().query(query, [email]);
 
-    if (result.length === 0) {
+    if (rows.length === 0) {
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
-    const user = result[0];
+    const user = rows[0];
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
       return res.status(401).json({ error: 'Senha incorreta' });
@@ -69,7 +66,10 @@ export const loginUser = (req, res) => {
         profile_type: user.profile_type,
       }
     });
-  });
+  } catch (error) {
+    console.error('Erro ao fazer login:', error.message);
+    res.status(500).json({ error: 'Erro ao fazer login' });
+  }
 };
 
 // Logout de Usuário
