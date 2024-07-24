@@ -19,13 +19,17 @@ const app = express();
 
 // Configuração de CORS
 const corsOptions = {
-  origin: 'https://oficial-dvgv.onrender.com',
+  origin: 'https://oficial-dvgv.onrender.com', // Frontend origin
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization', 'userid'],
   credentials: true,
 };
 
+// Enable CORS for all routes
 app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 // Middleware de segurança
 app.use(helmet());
