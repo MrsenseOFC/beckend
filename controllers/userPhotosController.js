@@ -1,7 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises'; // Use o módulo de fs com Promises para operações assíncronas
-import { promisePool } from '../connect.js'; // Atualize conforme necessário
+import promisePool from '../connect.js'; // Atualize para importar a exportação padrão
 import { v4 as uuidv4 } from 'uuid'; // Importa o UUID para criar identificadores únicos
 
 const __filename = fileURLToPath(import.meta.url);
