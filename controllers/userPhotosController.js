@@ -1,6 +1,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import fs from 'fs/promises'; // Use o módulo de fs com Promises para operações assíncronas
+import fs from 'fs'; // Importa o módulo fs
 import pool from '../connect.js'; // Atualize para importar a exportação padrão
 import { v4 as uuidv4 } from 'uuid'; // Importa o UUID para criar identificadores únicos
 
@@ -18,15 +18,15 @@ export const uploadProfilePicture = async (req, res) => {
 
   try {
     // Salva o arquivo no diretório com o novo nome
-    await fs.rename(req.file.path, filePath);
+    await fs.promises.rename(req.file.path, filePath);
 
     // Atualiza ou insere o caminho do arquivo no banco de dados
     const query = `
-      INSERT INTO user_photos (userId, filePath) 
+      INSERT INTO user_photos (user_id, filePath) 
       VALUES (?, ?) 
       ON DUPLICATE KEY UPDATE filePath = VALUES(filePath)
     `;
-    await pool.query(query, [req.body.userId, filePath]);
+    await pool.query(query, [req.body.user_id, filePath]);
 
     res.json({ filePath: `/uploads/photos/${uniqueFilename}` });
   } catch (error) {
@@ -40,7 +40,7 @@ export const getProfilePicture = async (req, res) => {
 
   try {
     // Consulta o caminho do arquivo no banco de dados
-    const query = 'SELECT filePath FROM user_photos WHERE userId = ?';
+    const query = 'SELECT filePath FROM user_photos WHERE user_id = ?';
     const [result] = await pool.query(query, [userId]);
     const filePath = result[0]?.filePath;
 
@@ -50,7 +50,7 @@ export const getProfilePicture = async (req, res) => {
 
     const absolutePath = path.join(__dirname, '..', filePath);
 
-    if (await fs.stat(absolutePath).catch(() => false)) {
+    if (await fs.promises.stat(absolutePath).catch(() => false)) {
       res.sendFile(absolutePath);
     } else {
       res.status(404).send('File not found');
