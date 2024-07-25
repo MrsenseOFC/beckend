@@ -1,7 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises'; // Use o módulo de fs com Promises para operações assíncronas
-import promisePool from '../connect.js'; // Atualize para importar a exportação padrão
+import pool from '../connect.js'; // Atualize para importar a exportação padrão
 import { v4 as uuidv4 } from 'uuid'; // Importa o UUID para criar identificadores únicos
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,7 +26,7 @@ export const uploadProfilePicture = async (req, res) => {
       VALUES (?, ?) 
       ON DUPLICATE KEY UPDATE filePath = VALUES(filePath)
     `;
-    await promisePool.query(query, [req.body.userId, filePath]);
+    await pool.query(query, [req.body.userId, filePath]);
 
     res.json({ filePath: `/uploads/photos/${uniqueFilename}` });
   } catch (error) {
@@ -41,7 +41,7 @@ export const getProfilePicture = async (req, res) => {
   try {
     // Consulta o caminho do arquivo no banco de dados
     const query = 'SELECT filePath FROM user_photos WHERE userId = ?';
-    const [result] = await promisePool.query(query, [userId]);
+    const [result] = await pool.query(query, [userId]);
     const filePath = result[0]?.filePath;
 
     if (!filePath) {
