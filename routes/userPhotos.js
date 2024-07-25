@@ -1,24 +1,26 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
-import { v4 as uuidv4 } from 'uuid'; // Importando uuidv4 para gerar nomes únicos
+import { fileURLToPath } from 'url';
+import { v4 as uuidv4 } from 'uuid'; // Importa uuidv4
 import { uploadProfilePicture, getProfilePicture } from '../controllers/userPhotosController.js';
 
 const router = express.Router();
 
 // Configuração do Multer para armazenamento de arquivos
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/photos');
+    cb(null, path.join(__dirname, '..', 'uploads', 'photos'));
   },
   filename: (req, file, cb) => {
-    // Utiliza UUID para garantir um nome único para o arquivo
     const uniqueFilename = `${uuidv4()}-${Date.now()}-${file.originalname}`;
     cb(null, uniqueFilename);
   },
 });
 
-// Filtro para aceitar apenas arquivos de imagem
 const fileFilter = (req, file, cb) => {
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
   if (allowedTypes.includes(file.mimetype)) {
@@ -31,16 +33,42 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ 
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // Limita o tamanho do arquivo a 5MB
+  limits: { fileSize: 5 * 1024 * 1024 } // Limite de tamanho do arquivo em bytes
 });
 
-// Rota para upload de fotos de perfil
-router.post('/upload', upload.single('profilePicture'), (req, res) => {
-  // Chama o controlador para processar o upload
-  uploadProfilePicture(req, res);
+// Rota para upload de foto de perfil
+router.post('/upload', upload.single('profilePicture'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).send('No file uploaded.');
+    }
+
+    if (!req.body.user_id) {
+      return res.status(400).send('User ID is required.');
+    }
+
+    await uploadProfilePicture(req, res);
+  } catch (error) {
+    next(error);
+  }
 });
 
-// Rota para obter foto de perfil com base no userId
-router.get('/:userId', getProfilePicture);
+// Rota para obter a foto de perfil
+router.get('/:userId', async (req, res, next) => {
+  try {
+    await getProfilePicture(req, res);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Middleware para tratamento de erros
+router.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    return res.status(400).send(`Multer error: ${err.message}`);
+  } else if (err) {
+    return res.status(500).send(`Server error: ${err.message}`);
+  }
+});
 
 export default router;
