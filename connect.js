@@ -22,8 +22,8 @@ const promisePool = pool.promise();
 // Testar a conexão ao banco de dados
 async function testConnection() {
     try {
-        const [rows, fields] = await promisePool.query('SELECT 1 + 1 AS solution');
-        console.log('Conexão bem sucedida ao banco de dados MySQL. Resultado da consulta: ', rows[0].solution);
+        const [rows] = await promisePool.query('SELECT 1 + 1 AS solution');
+        console.log('Conexão bem sucedida ao banco de dados MySQL. Resultado da consulta:', rows[0].solution);
     } catch (err) {
         console.error('Erro ao conectar ao banco de dados:', err);
     }
