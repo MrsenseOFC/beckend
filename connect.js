@@ -16,13 +16,10 @@ const pool = mysql.createPool({
     queueLimit: 0 // Número máximo de conexões na fila
 });
 
-// Promisify a pool para usar com async/await
-const promisePool = pool.promise();
-
 // Testar a conexão ao banco de dados
 async function testConnection() {
     try {
-        const [rows] = await promisePool.query('SELECT 1 + 1 AS solution');
+        const [rows] = await pool.query('SELECT 1 + 1 AS solution');
         console.log('Conexão bem sucedida ao banco de dados MySQL. Resultado da consulta:', rows[0].solution);
     } catch (err) {
         console.error('Erro ao conectar ao banco de dados:', err);
@@ -32,4 +29,4 @@ async function testConnection() {
 testConnection();
 
 // Exportar o pool de conexões para ser utilizado em outros módulos
-export default promisePool;
+export default pool;
