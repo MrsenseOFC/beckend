@@ -1,13 +1,16 @@
-// authController.js
-
-const db = require('../connect'); // Importe sua conexão com o banco de dados MySQL
+import promisePool from '../connect.js'; // Ajuste o caminho conforme necessário
 
 // Função para buscar o perfil do jogador pelo nome de usuário
-exports.getPlayerProfile = async (req, res) => {
+export const getPlayerProfile = async (req, res) => {
   const { username } = req.query;
 
+  if (!username) {
+    return res.status(400).json({ message: 'Nome de usuário é obrigatório' });
+  }
+
   try {
-    const [rows] = await db.query('SELECT * FROM player_profiles WHERE username = ?', [username]);
+    const query = 'SELECT * FROM player_profiles WHERE username = ?';
+    const [rows] = await promisePool.query(query, [username]);
 
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Perfil de jogador não encontrado' });
