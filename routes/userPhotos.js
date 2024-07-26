@@ -2,12 +2,11 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { v4 as uuidv4 } from 'uuid'; // Importa uuidv4
+import { v4 as uuidv4 } from 'uuid';
 import { uploadProfilePicture, getProfilePicture } from '../controllers/userPhotosController.js';
 
 const router = express.Router();
 
-// Configuração do Multer para armazenamento de arquivos
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -33,10 +32,9 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ 
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // Limite de tamanho do arquivo em bytes
+  limits: { fileSize: 5 * 1024 * 1024 } // 5 MB limit
 });
 
-// Rota para upload de foto de perfil
 router.post('/upload', upload.single('profilePicture'), async (req, res, next) => {
   try {
     if (!req.file) {
@@ -53,7 +51,6 @@ router.post('/upload', upload.single('profilePicture'), async (req, res, next) =
   }
 });
 
-// Rota para obter a foto de perfil
 router.get('/:userId', async (req, res, next) => {
   try {
     await getProfilePicture(req, res);
@@ -62,7 +59,6 @@ router.get('/:userId', async (req, res, next) => {
   }
 });
 
-// Middleware para tratamento de erros
 router.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     return res.status(400).send(`Multer error: ${err.message}`);
