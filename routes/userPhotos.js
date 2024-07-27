@@ -3,10 +3,10 @@ import { uploadProfilePicture, getProfilePicture } from '../controllers/userPhot
 
 const router = express.Router();
 
-// Rota para fazer upload da foto de perfil
+// Route to upload profile picture
 router.post('/upload', uploadProfilePicture);
 
-// Rota para obter a foto de perfil de um usuário específico
+// Route to get profile picture of a specific user
 router.get('/:userId', getProfilePicture);
 
 export default router;
