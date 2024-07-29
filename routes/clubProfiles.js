@@ -1,5 +1,9 @@
 
-import { getClubProfile, getPlayerProfile } from './controllers/clubProfilesController.js';
+// routes/clubProfiles.js
+import { getClubProfile } from '../controllers/clubProfilesController.js';
+
+// Código do roteador
+
 
 const router = express.Router();
 
