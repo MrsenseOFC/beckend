@@ -1,13 +1,8 @@
-
-// routes/clubProfiles.js
+import express from 'express';
 import { getClubProfile } from '../controllers/clubProfilesController.js';
-
-// Código do roteador
-
 
 const router = express.Router();
 
-router.get('/api/clubProfiles/:id', getClubProfile);
-
+router.get('/:id', getClubProfile);
 
 export default router;
