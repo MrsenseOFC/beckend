@@ -3,6 +3,10 @@ import promisePool from '../connect.js';
 export const getClubProfile = async (req, res) => {
   const clubId = req.params.id;
 
+  if (!clubId) {
+    return res.status(400).json({ error: 'ID do clube é necessário' });
+  }
+
   try {
     const query = 'SELECT * FROM ClubProfiles WHERE id = ?';
     const [result] = await promisePool.query(query, [clubId]);
