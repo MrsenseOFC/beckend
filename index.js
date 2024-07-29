@@ -49,17 +49,15 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-eval'"],
+      scriptSrc: ["'self'", "'unsafe-eval'"], // Adicionando 'unsafe-eval'
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https://oficial-dvgv.onrender.com"],
-      connectSrc: ["'self'", "http://localhost:7320", "https://oficial-dvgv.onrender.com"],
+      connectSrc: ["'self'", "http://localhost:7320"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
       frameSrc: ["'none'"],
     },
   },
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-}));
 
 
 // Middleware para configurar timeout
