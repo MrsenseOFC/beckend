@@ -1,4 +1,12 @@
 import express from 'express';
+import helmet from 'helmet';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import crypto from 'crypto';
 import userRoutes from './routes/users.js';
 import authRoutes from './routes/auth.js';
 import clubProfilesRoutes from './routes/clubProfiles.js';
@@ -9,19 +17,9 @@ import scoutProfilesRoutes from './routes/scoutProfiles.js';
 import opportunitiesRoutes from './routes/opportunities.js';
 import eventsRoutes from './routes/events.js';
 import playerProfilesRoutes from './routes/playerProfiles.js';
-import cookieParser from 'cookie-parser';
-import cors from 'cors';
-import helmet from 'helmet';
-import http from 'http';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import dotenv from 'dotenv';
-import crypto from 'crypto';
 
 dotenv.config();
 
-// Para usar __dirname com ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -48,22 +46,22 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-eval'"],
+      scriptSrc: ["'self'", "'unsafe-eval'"], // Adicionando 'unsafe-eval'
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https://example.com"],
-      connectSrc: ["'self'", "https://oficial-dvgv.onrender.com"],
+      imgSrc: ["'self'", "data:", "https://example.com"], // Adicione suas fontes de imagem aqui
+      connectSrc: ["'self'", "http://localhost:7320"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
       frameSrc: ["'none'"],
     },
   },
-  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginResourcePolicy: { policy: "cross-origin" }, // Ajuste conforme necessário
 }));
 
 // Middleware para configurar timeout
 app.use((req, res, next) => {
-  req.setTimeout(0);
-  res.setTimeout(0);
+  req.setTimeout(0); // Desativa o timeout
+  res.setTimeout(0); // Desativa o timeout
   next();
 });
 
@@ -78,11 +76,11 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware para adicionar headers de CORS nas respostas de arquivos estáticos
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://oficial-dvgv.onrender.com');
+  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin'); // Adicionando o cabeçalho Cross-Origin-Resource-Policy
   next();
 });
 
