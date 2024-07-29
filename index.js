@@ -29,13 +29,16 @@ const app = express();
 
 // Gerar JWT_SECRET automaticamente se não estiver definido no arquivo .env
 if (!process.env.JWT_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET must be defined in production environment');
+  }
   process.env.JWT_SECRET = crypto.randomBytes(64).toString('hex');
   console.log(`Generated JWT_SECRET: ${process.env.JWT_SECRET}`);
 }
 
-// Configuração do CORS para permitir a origem específica
+// Configuração do CORS para permitir origens específicas
 const corsOptions = {
-  origin: ['oficial-dvgv.onrender.com', 'http://localhost:5173'],
+  origin: ['https://oficial-dvgv.onrender.com', 'http://localhost:5173'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -48,8 +51,8 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-eval'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"], // Evitar 'unsafe-eval' se possível
+      styleSrc: ["'self'", "'unsafe-inline'"], // Evitar 'unsafe-inline' se possível
       imgSrc: ["'self'", "data:", "https://example.com"],
       connectSrc: ["'self'", "https://oficial-dvgv.onrender.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
@@ -60,11 +63,10 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 
-
-// Middleware para configurar timeout
+// Middleware para configurar timeout (ajustado para 5 minutos)
 app.use((req, res, next) => {
-  req.setTimeout(0);
-  res.setTimeout(0);
+  req.setTimeout(300000); // 5 minutos
+  res.setTimeout(300000); // 5 minutos
   next();
 });
 
@@ -79,7 +81,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware para adicionar headers de CORS nas respostas de arquivos estáticos
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://talent2show.onrender.com');
+  res.header('Access-Control-Allow-Origin', corsOptions.origin.join(', '));
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
