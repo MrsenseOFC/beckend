@@ -1,7 +1,17 @@
 import express from 'express';
-import helmet from 'helmet';
-import cors from 'cors';
+import userRoutes from './routes/users.js';
+import authRoutes from './routes/auth.js';
+import clubProfilesRoutes from './routes/clubProfiles.js';
+import userPhotosRoutes from './routes/userPhotos.js';
+import userVideosRoutes from './routes/userVideos.js';
+import universityProfilesRoutes from './routes/universityProfiles.js';
+import scoutProfilesRoutes from './routes/scoutProfiles.js';
+import opportunitiesRoutes from './routes/opportunities.js';
+import eventsRoutes from './routes/events.js';
+import playerProfilesRoutes from './routes/playerProfiles.js';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import helmet from 'helmet';
 import http from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -25,7 +35,7 @@ if (!process.env.JWT_SECRET) {
 
 // Configuração do CORS para permitir a origem específica
 const corsOptions = {
-  origin: ['https://oficial-dvgv.onrender.com', 'http://localhost:5173'],
+  origin: ['oficial-dvgv.onrender.com', 'http://localhost:5173'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -38,9 +48,9 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-eval'"], // Adicionando 'unsafe-eval'
+      scriptSrc: ["'self'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https://oficial-dvgv.onrender.com"],
+      imgSrc: ["'self'", "data:", "https://example.com"],
       connectSrc: ["'self'", "http://localhost:7320"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
@@ -49,6 +59,7 @@ app.use(helmet({
   },
   crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
+
 
 // Middleware para configurar timeout
 app.use((req, res, next) => {
@@ -68,25 +79,13 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware para adicionar headers de CORS nas respostas de arquivos estáticos
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://oficial-dvgv.onrender.com');
+  res.header('Access-Control-Allow-Origin', 'https://talent2show.onrender.com');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Cross-Origin-Resource-Policy', 'cross-origin'); // Adicionando o cabeçalho Cross-Origin-Resource-Policy
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
   next();
 });
-
-// Importando rotas
-import userRoutes from './routes/users.js';
-import authRoutes from './routes/auth.js';
-import clubProfilesRoutes from './routes/clubProfiles.js';
-import userPhotosRoutes from './routes/userPhotos.js';
-import userVideosRoutes from './routes/userVideos.js';
-import universityProfilesRoutes from './routes/universityProfiles.js';
-import scoutProfilesRoutes from './routes/scoutProfiles.js';
-import opportunitiesRoutes from './routes/opportunities.js';
-import eventsRoutes from './routes/events.js';
-import playerProfilesRoutes from './routes/playerProfiles.js';
 
 // Rotas para diferentes endpoints
 app.use('/api/users', userRoutes);
