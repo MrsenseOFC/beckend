@@ -49,7 +49,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-eval'"], // Adicionando 'unsafe-eval'
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https://example.com"], // Adicione suas fontes de imagem aqui
-      connectSrc: ["'self'", "http://localhost:7320"],
+      connectSrc: ["'self'", "https://oficial-dvgv.onrender.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
       frameSrc: ["'none'"],
