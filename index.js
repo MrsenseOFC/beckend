@@ -51,7 +51,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https://example.com"],
-      connectSrc: ["'self'", "http://localhost:7320"],
+      connectSrc: ["'self'", "https://oficial-dvgv.onrender.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
       frameSrc: ["'none'"],
@@ -59,7 +59,6 @@ app.use(helmet({
   },
   crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
-
 
 // Middleware para configurar timeout
 app.use((req, res, next) => {
