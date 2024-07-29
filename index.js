@@ -44,14 +44,15 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Middleware para segurança adicional
+// Exemplo de configuração de helmet para CSP
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-eval'"], // Adicionando 'unsafe-eval'
+      scriptSrc: ["'self'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https://oficial-dvgv.onrender.com"],
-      connectSrc: ["'self'", "http://localhost:7320"],
+      connectSrc: ["'self'", "http://localhost:7320", "https://oficial-dvgv.onrender.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
       frameSrc: ["'none'"],
@@ -59,6 +60,7 @@ app.use(helmet({
   },
   crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
+
 
 // Middleware para configurar timeout
 app.use((req, res, next) => {
