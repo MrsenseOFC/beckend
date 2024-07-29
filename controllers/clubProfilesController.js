@@ -1,4 +1,4 @@
-import promisePool from '../connect.js';
+import promisePool from '../connect.js'; // Verifique o caminho
 
 export const getClubProfile = async (req, res) => {
   const clubId = req.params.id;
