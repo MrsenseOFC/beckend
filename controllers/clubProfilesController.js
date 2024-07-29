@@ -1,4 +1,3 @@
-// controllers/clubProfilesController.js
 import promisePool from '../connect.js';
 
 export const getClubProfile = async (req, res) => {
