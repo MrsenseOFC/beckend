@@ -21,35 +21,21 @@ import crypto from 'crypto';
 
 dotenv.config();
 
-// To use __dirname with ES modules
+// Para usar __dirname com ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
 
-// Generate JWT_SECRET automatically if not defined in the .env file
+// Gerar JWT_SECRET automaticamente se não estiver definido no arquivo .env
 if (!process.env.JWT_SECRET) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('JWT_SECRET must be defined in production environment');
-  }
   process.env.JWT_SECRET = crypto.randomBytes(64).toString('hex');
   console.log(`Generated JWT_SECRET: ${process.env.JWT_SECRET}`);
 }
 
-// CORS configuration to allow specific origins
-const allowedOrigins = [
-  'https://oficial-dvgv.onrender.com',
-  'http://localhost:5173'
-];
-
+// Configuração do CORS para permitir a origem específica
 const corsOptions = {
-  origin: (origin, callback) => {
-    if (allowedOrigins.includes(origin) || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: ['oficial-dvgv.onrender.com', 'http://localhost:5173'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -57,7 +43,76 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Additional security middleware
+// Middleware para segurança adicional
 app.use(helmet({
   contentSecurityPolicy: {
-    directives
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"], // Avoid 'unsafe-eval'
+      styleSrc: ["'self'", "'unsafe-inline'"], // Avoid 'unsafe-inline'
+      imgSrc: ["'self'", "data:", "https://example.com"],
+      connectSrc: ["'self'", "https://oficial-dvgv.onrender.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      objectSrc: ["'none'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+}));
+
+
+
+// Middleware para configurar timeout
+app.use((req, res, next) => {
+  req.setTimeout(0);
+  res.setTimeout(0);
+  next();
+});
+
+// Middleware para analisar o corpo das solicitações como JSON
+app.use(express.json());
+
+// Middleware para analisar cookies
+app.use(cookieParser());
+
+// Servindo arquivos estáticos da pasta uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Middleware para adicionar headers de CORS nas respostas de arquivos estáticos
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://talent2show.onrender.com');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+});
+
+// Rotas para diferentes endpoints
+app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/clubs', clubProfilesRoutes);
+app.use('/api/userPhotos', userPhotosRoutes);
+app.use('/api/userVideos', userVideosRoutes);
+app.use('/api/universities', universityProfilesRoutes);
+app.use('/api/scouts', scoutProfilesRoutes);
+app.use('/api/opportunities', opportunitiesRoutes);
+app.use('/api/events', eventsRoutes);
+app.use('/api/playerProfiles', playerProfilesRoutes);
+
+// Middleware para tratamento de erros
+app.use((err, req, res, next) => {
+  console.error('Erro:', err.message);
+  res.status(err.status || 500).json({
+    error: {
+      message: err.message || 'Internal Server Error',
+    },
+  });
+});
+
+const PORT = process.env.PORT || 7320;
+const server = http.createServer(app);
+
+server.listen(PORT, () => {
+  console.log(`Servidor está rodando na porta ${PORT}`);
+});
