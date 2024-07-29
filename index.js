@@ -38,7 +38,18 @@ if (!process.env.JWT_SECRET) {
 
 // Configuração do CORS para permitir origens específicas
 const corsOptions = {
-  origin: ['https://oficial-dvgv.onrender.com', 'http://localhost:5173'],
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'https://oficial-dvgv.onrender.com',
+      'http://localhost:5173'
+    ];
+
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -52,7 +63,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'"], // Evitar 'unsafe-eval' se possível
-      styleSrc: ["'self'", "'unsafe-inline'"], // Evitar 'unsafe-inline' se possível
+      styleSrc: ["'self'"], // Evitar 'unsafe-inline' se possível
       imgSrc: ["'self'", "data:", "https://example.com"],
       connectSrc: ["'self'", "https://oficial-dvgv.onrender.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
@@ -78,16 +89,6 @@ app.use(cookieParser());
 
 // Servindo arquivos estáticos da pasta uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Middleware para adicionar headers de CORS nas respostas de arquivos estáticos
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', corsOptions.origin.join(', '));
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
-  next();
-});
 
 // Rotas para diferentes endpoints
 app.use('/api/users', userRoutes);
