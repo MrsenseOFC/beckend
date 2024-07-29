@@ -6,7 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
 // Registro de Usuário
 export const registerUser = async (req, res) => {
-  const { username, email, password, profile_type, competitive_category, competitive_level } = req.body;
+  const { username, email, password, profile_type, competitive_category, competitive_level, phone_number } = req.body;
 
   // Verificação se todos os campos obrigatórios estão presentes
   if (!username || !email || !password || !profile_type || !competitive_category || !competitive_level) {
@@ -27,14 +27,14 @@ export const registerUser = async (req, res) => {
 
     // Inserção do novo usuário no banco de dados
     const query = `
-      INSERT INTO Users (username, email, password, profile_type, competitive_category, competitive_level)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO Users (username, email, password, profile_type, competitive_category, competitive_level, phone_number)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
-    const [userResult] = await promisePool.query(query, [username, email, hashedPassword, profile_type, competitive_category, competitive_level]);
+    const [userResult] = await promisePool.query(query, [username, email, hashedPassword, profile_type, competitive_category, competitive_level, phone_number]);
 
     const userId = userResult.insertId; // Obtém o ID do novo usuário inserido
 
-    // Inserção do perfil do jogador na tabela PlayerProfiles
+    // Inserção do perfil do jogador na tabela PlayerProfiles, se aplicável
     if (profile_type === 'player') {
       const playerProfileQuery = `
         INSERT INTO PlayerProfiles (user_id, username, email, profile_image)
@@ -59,7 +59,7 @@ export const loginUser = async (req, res) => {
   }
 
   try {
-    const query = 'SELECT * FROM users WHERE email = ?';
+    const query = 'SELECT * FROM Users WHERE email = ?';
     const [result] = await promisePool.query(query, [email]);
 
     if (result.length === 0) {
