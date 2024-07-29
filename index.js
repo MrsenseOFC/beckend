@@ -1,18 +1,8 @@
 import express from 'express';
-import http from 'http'; // Adicionando a importação do módulo http
-import userRoutes from './routes/users.js';
-import authRoutes from './routes/auth.js';
-import clubProfilesRoutes from './routes/clubProfiles.js';
-import userPhotosRoutes from './routes/userPhotos.js';
-import userVideosRoutes from './routes/userVideos.js';
-import universityProfilesRoutes from './routes/universityProfiles.js';
-import scoutProfilesRoutes from './routes/scoutProfiles.js';
-import opportunitiesRoutes from './routes/opportunities.js';
-import eventsRoutes from './routes/events.js';
-import playerProfilesRoutes from './routes/playerProfiles.js';
-import cookieParser from 'cookie-parser';
-import cors from 'cors';
 import helmet from 'helmet';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import http from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -44,7 +34,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Middleware para segurança adicional
-// Exemplo de configuração de helmet para CSP
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -58,7 +47,8 @@ app.use(helmet({
       frameSrc: ["'none'"],
     },
   },
-
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+}));
 
 // Middleware para configurar timeout
 app.use((req, res, next) => {
@@ -85,6 +75,18 @@ app.use((req, res, next) => {
   res.header('Cross-Origin-Resource-Policy', 'cross-origin'); // Adicionando o cabeçalho Cross-Origin-Resource-Policy
   next();
 });
+
+// Importando rotas
+import userRoutes from './routes/users.js';
+import authRoutes from './routes/auth.js';
+import clubProfilesRoutes from './routes/clubProfiles.js';
+import userPhotosRoutes from './routes/userPhotos.js';
+import userVideosRoutes from './routes/userVideos.js';
+import universityProfilesRoutes from './routes/universityProfiles.js';
+import scoutProfilesRoutes from './routes/scoutProfiles.js';
+import opportunitiesRoutes from './routes/opportunities.js';
+import eventsRoutes from './routes/events.js';
+import playerProfilesRoutes from './routes/playerProfiles.js';
 
 // Rotas para diferentes endpoints
 app.use('/api/users', userRoutes);
