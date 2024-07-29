@@ -50,7 +50,6 @@ export const registerUser = async (req, res) => {
   }
 };
 
-
 // Login de Usuário
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
