@@ -1,8 +1,8 @@
-import express from "express";
-import { getUser } from "../controllers/clubProfiles.js";
+import express from 'express';
+import { getClubProfile } from '../controllers/clubProfilesController.js';
 
 const router = express.Router();
 
-router.get("/find/:userId", getUser);
+router.get('/:id', getClubProfile);
 
 export default router;

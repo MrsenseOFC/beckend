@@ -1,68 +1,42 @@
-import pool from '../connect.js';
-import multer from 'multer';
+import promisePool from '../connect.js';
+import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+export const uploadProfilePicture = async (req, res) => {
+  const userId = req.params.userId;
+  const imageFile = req.file.filename;
 
-const storage = multer.diskStorage({
-  destination: path.join(__dirname, '../uploads/profile_pictures'),
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
+  try {
+    const query = 'UPDATE ProfilePictures SET profile_image = ? WHERE user_id = ?';
+    const [result] = await promisePool.query(query, [imageFile, userId]);
 
-const upload = multer({ storage });
-
-export const uploadProfilePicture = (req, res) => {
-  upload.single('profilePicture')(req, res, async (err) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
+    if (result.affectedRows === 0) {
+      // Se não houver uma linha afetada, significa que o usuário não tem uma entrada, então criamos uma
+      const insertQuery = 'INSERT INTO ProfilePictures (user_id, profile_image) VALUES (?, ?)';
+      await promisePool.query(insertQuery, [userId, imageFile]);
     }
 
-    const userId = req.body.user_id;
-    if (!userId) {
-      return res.status(400).json({ message: 'User ID is required' });
-    }
-    const filePath = `/uploads/profile_pictures/${req.file.filename}`;
-
-    try {
-      // Check if user_id exists in users table
-      const [userResult] = await pool.query('SELECT id FROM users WHERE id = ?', [userId]);
-      if (userResult.length === 0) {
-        return res.status(400).json({ message: 'User ID does not exist' });
-      }
-
-      // Update profile picture in users table
-      const updateQuery = 'UPDATE users SET profile_picture_url = ? WHERE id = ?';
-      await pool.query(updateQuery, [filePath, userId]);
-
-      // Insert record in user_photos table
-      const insertQuery = 'INSERT INTO user_photos (user_id, file_path) VALUES (?, ?)';
-      await pool.query(insertQuery, [userId, filePath]);
-
-      res.status(200).json({ message: 'Upload successful!', filePath });
-    } catch (error) {
-      return res.status(500).json({ message: 'Error saving file path to database.', error: error.message });
-    }
-  });
+    res.status(200).json({ image_file: imageFile });
+  } catch (error) {
+    console.error('Erro ao atualizar a imagem de perfil:', error);
+    res.status(500).json({ error: 'Erro ao atualizar a imagem de perfil' });
+  }
 };
 
 export const getProfilePicture = async (req, res) => {
-  const { userId } = req.params;
+  const userId = req.params.userId;
 
   try {
-    const query = 'SELECT profile_picture_url FROM users WHERE id = ?';
-    const [results] = await pool.query(query, [userId]);
+    const query = 'SELECT profile_image FROM ProfilePictures WHERE user_id = ?';
+    const [result] = await promisePool.query(query, [userId]);
 
-    if (results.length === 0 || !results[0].profile_picture_url) {
-      return res.status(404).json({ message: 'Image not found.' });
+    if (result.length === 0) {
+      return res.status(404).json({ error: 'Imagem de perfil não encontrada' });
     }
 
-    const filePath = results[0].profile_picture_url;
-    res.json({ filePath });
+    res.status(200).json({ profile_image: result[0].profile_image });
   } catch (error) {
-    return res.status(500).json({ message: 'Error fetching profile picture from database.', error: error.message });
+    console.error('Erro ao obter a imagem de perfil:', error);
+    res.status(500).json({ error: 'Erro ao obter a imagem de perfil' });
   }
 };

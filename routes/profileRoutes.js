@@ -1,10 +1,12 @@
-// playerProfilesRoutes.js
+// src/routes/playerProfiles.js
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const playerController = require('../controllers/playerController');
 
-// Rota para buscar o perfil do jogador pelo nome de usuário
-router.get('/profile', playerController.getPlayerProfile);
+// Controladores para as rotas (substitua pelos seus controladores reais)
+import { getPlayerProfile } from '../controllers/playerProfilesController';
 
-module.exports = router;
+// Rota para obter o perfil do jogador
+router.get('/:id', getPlayerProfile);
+
+export default router;

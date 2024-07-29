@@ -6,16 +6,16 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
 // Registro de Usuário
 export const registerUser = async (req, res) => {
-  const { username, email, password, profile_type, competitive_category, plan } = req.body;
+  const { username, email, password, profile_type, competitive_category, competitive_level } = req.body;
 
   // Verificação se todos os campos obrigatórios estão presentes
-  if (!username || !email || !password || !profile_type || !competitive_category || !plan) {
+  if (!username || !email || !password || !profile_type || !competitive_category || !competitive_level) {
     return res.status(400).json({ error: 'Por favor, preencha todos os campos obrigatórios' });
   }
 
   try {
     // Verificar se o email já está em uso
-    const checkEmailQuery = 'SELECT * FROM users WHERE email = ?';
+    const checkEmailQuery = 'SELECT * FROM Users WHERE email = ?';
     const [results] = await promisePool.query(checkEmailQuery, [email]);
 
     if (results.length > 0) {
@@ -26,8 +26,22 @@ export const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Inserção do novo usuário no banco de dados
-    const query = 'INSERT INTO users (username, email, password, profile_type, competitive_category, plan) VALUES (?, ?, ?, ?, ?, ?)';
-    await promisePool.query(query, [username, email, hashedPassword, profile_type, competitive_category, plan]);
+    const query = `
+      INSERT INTO Users (username, email, password, profile_type, competitive_category, competitive_level)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    const [userResult] = await promisePool.query(query, [username, email, hashedPassword, profile_type, competitive_category, competitive_level]);
+
+    const userId = userResult.insertId; // Obtém o ID do novo usuário inserido
+
+    // Inserção do perfil do jogador na tabela PlayerProfiles
+    if (profile_type === 'player') {
+      const playerProfileQuery = `
+        INSERT INTO PlayerProfiles (user_id, username, email, profile_image)
+        VALUES (?, ?, ?, ?)
+      `;
+      await promisePool.query(playerProfileQuery, [userId, username, email, null]);
+    }
 
     res.status(201).json({ message: 'Usuário registrado com sucesso' });
   } catch (error) {
@@ -35,6 +49,7 @@ export const registerUser = async (req, res) => {
     res.status(500).json({ error: 'Erro ao registrar usuário' });
   }
 };
+
 
 // Login de Usuário
 export const loginUser = async (req, res) => {
@@ -59,6 +74,10 @@ export const loginUser = async (req, res) => {
       return res.status(401).json({ error: 'Senha incorreta' });
     }
 
+    const profileImageQuery = 'SELECT profile_image FROM PlayerProfiles WHERE user_id = ?';
+    const [imageResult] = await promisePool.query(profileImageQuery, [user.id]);
+    const profileImage = imageResult.length > 0 ? imageResult[0].profile_image : null;
+
     const token = jwt.sign({ id: user.id, username: user.username, profile_type: user.profile_type }, JWT_SECRET, { expiresIn: '1h' });
 
     res.status(200).json({
@@ -68,6 +87,7 @@ export const loginUser = async (req, res) => {
         id: user.id,
         username: user.username,
         profile_type: user.profile_type,
+        profileImage: profileImage,
       }
     });
   } catch (error) {
@@ -78,8 +98,6 @@ export const loginUser = async (req, res) => {
 
 // Logout de Usuário
 export const logoutUser = (req, res) => {
-  // Se você estiver usando um sistema de blacklist de tokens ou algo similar, você pode adicionar lógica aqui.
-
   res.status(200).json({
     success: true,
     message: 'Logout realizado com sucesso'
