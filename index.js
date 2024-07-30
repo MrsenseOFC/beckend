@@ -35,7 +35,7 @@ if (!process.env.JWT_SECRET) {
 
 // Configuração do CORS para permitir a origem específica
 const corsOptions = {
-  origin: 'https://oficial-dvgv.onrender.com', // Permitir esta origem
+  origin: '', // Permitir esta origem
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -51,7 +51,7 @@ app.use(helmet({
       scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:"],
-      connectSrc: ["'self'", "https://oficial-dvgv.onrender.com"],
+      connectSrc: ["'self'", ""],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
       frameSrc: ["'none'"],
