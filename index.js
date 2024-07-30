@@ -42,13 +42,6 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Middleware para configurar timeout
-app.use((req, res, next) => {
-  req.setTimeout(0);
-  res.setTimeout(0);
-  next();
-});
-
 // Middleware para analisar o corpo das solicitações como JSON
 app.use(express.json());
 
