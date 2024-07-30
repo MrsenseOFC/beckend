@@ -18,3 +18,4 @@ export const getUser = async (req, res) => {
     res.status(500).json({ error: 'Erro ao buscar usuário' });
   }
 };
+
