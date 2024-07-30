@@ -35,7 +35,7 @@ if (!process.env.JWT_SECRET) {
 
 // Configuração do CORS para permitir a origem específica
 const corsOptions = {
-  origin: '', // Permitir esta origem
+  origin: 'https://talent2show-com-46dh.onrender.com', // Permitir esta origem
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -48,17 +48,24 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:"],
-      connectSrc: ["'self'", ""],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https://example.com"],
+      connectSrc: ["'self'", "https://talent2show-com-46dh.onrender.com"], // Permitir conexões da origem
+      fontSrc: ["'self'", "https://talent2show-com-46dh.onrender.com"],
       objectSrc: ["'none'"],
       frameSrc: ["'none'"],
     },
   },
   crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
+
+// Middleware para configurar timeout
+app.use((req, res, next) => {
+  req.setTimeout(0);
+  res.setTimeout(0);
+  next();
+});
 
 // Middleware para analisar o corpo das solicitações como JSON
 app.use(express.json());
@@ -71,7 +78,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware para adicionar headers de CORS nas respostas de arquivos estáticos
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://oficial-dvgv.onrender.com'); // Permitir esta origem
+  res.header('Access-Control-Allow-Origin', 'https://talent2show-com-46dh.onrender.com'); // Permitir esta origem
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
