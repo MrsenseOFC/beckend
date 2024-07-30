@@ -1,9 +1,9 @@
 import express from 'express';
-import { getClubProfile } from '../controllers/clubProfilesController.js'; // Verifique o caminho
+import { getClubProfile } from '../controllers/clubProfilesController.js';
+import { authenticateToken } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-// Rota para obter o perfil do clube
-router.get('/:id', getClubProfile);
+router.get('/:id', getClubProfile, authenticateToken);
 
 export default router;
