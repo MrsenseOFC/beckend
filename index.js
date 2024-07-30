@@ -50,8 +50,8 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https://example.com"],
-      connectSrc: ["'self'", "https://oficial-dvgv.onrender.com"], // Permitir conexões da origem
+      imgSrc: ["'self'", "data:"],
+      connectSrc: ["'self'", "https://oficial-dvgv.onrender.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
       frameSrc: ["'none'"],
