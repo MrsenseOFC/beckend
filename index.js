@@ -11,6 +11,7 @@ import eventsRoutes from './routes/events.js';
 import playerProfilesRoutes from './routes/playerProfiles.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import helmet from 'helmet';
 import http from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -41,6 +42,23 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// Middleware para segurança adicional
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:"],
+      connectSrc: ["'self'", "https://oficial-dvgv.onrender.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      objectSrc: ["'none'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+}));
 
 // Middleware para analisar o corpo das solicitações como JSON
 app.use(express.json());
