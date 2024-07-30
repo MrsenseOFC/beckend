@@ -30,6 +30,7 @@ export const registerUser = async (req, res) => {
 
     const userId = userResult.insertId;
 
+    // Inserção do perfil do jogador na tabela PlayerProfiles, se aplicável
     if (profile_type === 'player') {
       const playerProfileQuery = `
         INSERT INTO PlayerProfiles (user_id, username, email, profile_image)
@@ -45,16 +46,20 @@ export const registerUser = async (req, res) => {
   }
 };
 
+
+// Login de Usuário
 // Login de Usuário
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
+  // Verificação de campos obrigatórios
   if (!email || !password) {
     return res.status(400).json({ error: 'Por favor, preencha todos os campos obrigatórios' });
   }
 
   try {
-    const query = 'SELECT * FROM users WHERE email = ?';
+    // Verificar se o usuário existe
+    const query = 'SELECT * FROM Users WHERE email = ?';
     const [result] = await promisePool.query(query, [email]);
 
     if (result.length === 0) {
@@ -62,16 +67,20 @@ export const loginUser = async (req, res) => {
     }
 
     const user = result[0];
+
+    // Comparar a senha fornecida com a senha armazenada
     const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
       return res.status(401).json({ error: 'Senha incorreta' });
     }
 
+    // Obter a imagem de perfil, se disponível
     const profileImageQuery = 'SELECT profile_image FROM PlayerProfiles WHERE user_id = ?';
     const [imageResult] = await promisePool.query(profileImageQuery, [user.id]);
     const profileImage = imageResult.length > 0 ? imageResult[0].profile_image : null;
 
+    // Gerar o token JWT
     const token = jwt.sign({ id: user.id, username: user.username, profile_type: user.profile_type }, JWT_SECRET, { expiresIn: '1h' });
 
     res.status(200).json({
@@ -89,6 +98,7 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ error: 'Erro ao fazer login' });
   }
 };
+
 
 // Logout de Usuário
 export const logoutUser = (req, res) => {
