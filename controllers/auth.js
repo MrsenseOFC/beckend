@@ -8,29 +8,33 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 export const registerUser = async (req, res) => {
   const { username, email, password, profile_type, competitive_category, competitive_level } = req.body;
 
+  // Verificação se todos os campos obrigatórios estão presentes
   if (!username || !email || !password || !profile_type || !competitive_category || !competitive_level) {
     return res.status(400).json({ error: 'Por favor, preencha todos os campos obrigatórios' });
   }
 
   try {
-    const checkEmailQuery = 'SELECT * FROM Users WHERE email = ?';
+    // Verificar se o email já está em uso
+    const checkEmailQuery = 'SELECT * FROM users WHERE email = ?';
     const [results] = await promisePool.query(checkEmailQuery, [email]);
 
     if (results.length > 0) {
       return res.status(400).json({ error: 'Email já está em uso' });
     }
 
+    // Geração de hash da senha
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Inserção do novo usuário no banco de dados
     const query = `
-      INSERT INTO Users (username, email, password, profile_type, competitive_category, competitive_level)
+      INSERT INTO users (username, email, password, profile_type, competitive_category, competitive_level)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
     const [userResult] = await promisePool.query(query, [username, email, hashedPassword, profile_type, competitive_category, competitive_level]);
 
-    const userId = userResult.insertId;
+    const userId = userResult.insertId; // Obtém o ID do novo usuário inserido
 
-    // Inserção do perfil do jogador na tabela PlayerProfiles, se aplicável
+    // Inserção do perfil do jogador na tabela PlayerProfiles
     if (profile_type === 'player') {
       const playerProfileQuery = `
         INSERT INTO PlayerProfiles (user_id, username, email, profile_image)
@@ -46,20 +50,16 @@ export const registerUser = async (req, res) => {
   }
 };
 
-
-// Login de Usuário
 // Login de Usuário
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
-  // Verificação de campos obrigatórios
   if (!email || !password) {
     return res.status(400).json({ error: 'Por favor, preencha todos os campos obrigatórios' });
   }
 
   try {
-    // Verificar se o usuário existe
-    const query = 'SELECT * FROM Users WHERE email = ?';
+    const query = 'SELECT * FROM users WHERE email = ?';
     const [result] = await promisePool.query(query, [email]);
 
     if (result.length === 0) {
@@ -67,20 +67,20 @@ export const loginUser = async (req, res) => {
     }
 
     const user = result[0];
-
-    // Comparar a senha fornecida com a senha armazenada
     const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
       return res.status(401).json({ error: 'Senha incorreta' });
     }
 
-    // Obter a imagem de perfil, se disponível
-    const profileImageQuery = 'SELECT profile_image FROM PlayerProfiles WHERE user_id = ?';
-    const [imageResult] = await promisePool.query(profileImageQuery, [user.id]);
-    const profileImage = imageResult.length > 0 ? imageResult[0].profile_image : null;
+    // Consultar imagem de perfil, se existir
+    let profileImage = null;
+    if (user.profile_type === 'player') {
+      const profileImageQuery = 'SELECT profile_image FROM PlayerProfiles WHERE user_id = ?';
+      const [imageResult] = await promisePool.query(profileImageQuery, [user.id]);
+      profileImage = imageResult.length > 0 ? imageResult[0].profile_image : null;
+    }
 
-    // Gerar o token JWT
     const token = jwt.sign({ id: user.id, username: user.username, profile_type: user.profile_type }, JWT_SECRET, { expiresIn: '1h' });
 
     res.status(200).json({
@@ -98,7 +98,6 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ error: 'Erro ao fazer login' });
   }
 };
-
 
 // Logout de Usuário
 export const logoutUser = (req, res) => {
