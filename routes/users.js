@@ -4,7 +4,6 @@ import { authenticateToken } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-// Use the authenticateToken middleware to protect the getUser route
 router.get('/', authenticateToken, getUser);
 
 export default router;
