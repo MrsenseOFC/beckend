@@ -99,11 +99,11 @@ app.use('/api/events', eventsRoutes);
 app.use('/api/playerProfiles', playerProfilesRoutes);
 
 // Servindo arquivos estáticos do build do React
-app.use(express.static(path.join(__dirname, '../')));
+app.use(express.static(path.join(__dirname, '../Oficial')));
 
 // Redireciona todas as outras requisições para o index.html
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../', 'main..tsx'));
+  res.sendFile(path.join(__dirname, '../Oficial', 'index.html'));
 });
 
 // Middleware para tratamento de erros
