@@ -1,116 +1,109 @@
-import express from 'express';
-import userRoutes from './routes/users.js';
-import authRoutes from './routes/auth.js';
-import clubProfilesRoutes from './routes/clubProfiles.js';
-import userPhotosRoutes from './routes/userPhotos.js';
-import userVideosRoutes from './routes/userVideos.js';
-import universityProfilesRoutes from './routes/universityProfiles.js';
-import scoutProfilesRoutes from './routes/scoutProfiles.js';
-import opportunitiesRoutes from './routes/opportunities.js';
-import eventsRoutes from './routes/events.js';
-import playerProfilesRoutes from './routes/playerProfiles.js';
-import cookieParser from 'cookie-parser';
-import cors from 'cors';
-import helmet from 'helmet';
-import http from 'http';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import dotenv from 'dotenv';
-import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import promisePool from '../connect.js'; // Ajuste o caminho conforme necessário
 
-dotenv.config();
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
-// Para usar __dirname com ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// Registro de Usuário
+export const registerUser = async (req, res) => {
+  const { username, email, password, profile_type, competitive_category, competitive_level } = req.body;
 
-const app = express();
+  // Verificação se todos os campos obrigatórios estão presentes
+  if (!username || !email || !password || !profile_type || !competitive_category || !competitive_level) {
+    return res.status(400).json({ error: 'Por favor, preencha todos os campos obrigatórios' });
+  }
 
-// Gerar JWT_SECRET automaticamente se não estiver definido no arquivo .env
-if (!process.env.JWT_SECRET) {
-  process.env.JWT_SECRET = crypto.randomBytes(64).toString('hex');
-  console.log(`Generated JWT_SECRET: ${process.env.JWT_SECRET}`);
-}
+  try {
+    // Verificar se o email já está em uso
+    const checkEmailQuery = 'SELECT * FROM Users WHERE email = ?';
+    const [results] = await promisePool.query(checkEmailQuery, [email]);
 
-// Configuração do CORS para permitir a origem específica
-const corsOptions = {
-  origin: 'https://talent2show-com-46dh.onrender.com', // Permitir esta origem
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
+    if (results.length > 0) {
+      return res.status(400).json({ error: 'Email já está em uso' });
+    }
+
+    // Geração de hash da senha
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Inserção do novo usuário no banco de dados
+    const query = `
+      INSERT INTO Users (username, email, password, profile_type, competitive_category, competitive_level)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    const [userResult] = await promisePool.query(query, [username, email, hashedPassword, profile_type, competitive_category, competitive_level]);
+
+    const userId = userResult.insertId; // Obtém o ID do novo usuário inserido
+
+    // Inserção do perfil do jogador na tabela PlayerProfiles
+    if (profile_type === 'player') {
+      const playerProfileQuery = `
+        INSERT INTO PlayerProfiles (user_id, username, email, profile_image)
+        VALUES (?, ?, ?, ?)
+      `;
+      await promisePool.query(playerProfileQuery, [userId, username, email, null]);
+    }
+
+    res.status(201).json({ message: 'Usuário registrado com sucesso' });
+  } catch (error) {
+    console.error('Erro ao registrar usuário:', error);
+    res.status(500).json({ error: 'Erro ao registrar usuário' });
+  }
 };
 
-app.use(cors(corsOptions));
 
-// Middleware para segurança adicional
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-eval'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https://example.com"],
-      connectSrc: ["'self'", "https://talent2show-com-46dh.onrender.com"], // Permitir conexões da origem
-      fontSrc: ["'self'", "https://talent2show-com-46dh.onrender.com"],
-      objectSrc: ["'none'"],
-      frameSrc: ["'none'"],
-    },
-  },
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-}));
+// Login de Usuário
+export const loginUser = async (req, res) => {
+  const { email, password } = req.body;
 
-// Middleware para configurar timeout
-app.use((req, res, next) => {
-  req.setTimeout(0);
-  res.setTimeout(0);
-  next();
-});
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Por favor, preencha todos os campos obrigatórios' });
+  }
 
-// Middleware para analisar o corpo das solicitações como JSON
-app.use(express.json());
+  try {
+    const query = 'SELECT * FROM Users WHERE email = ?';
+    const [result] = await promisePool.query(query, [email]);
 
-// Middleware para analisar cookies
-app.use(cookieParser());
+    if (result.length === 0) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
 
-// Servindo arquivos estáticos da pasta uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+    const user = result[0];
+    const match = await bcrypt.compare(password, user.password);
 
-// Middleware para adicionar headers de CORS nas respostas de arquivos estáticos
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://talent2show-com-46dh.onrender.com'); // Permitir esta origem
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
-  next();
-});
+    if (!match) {
+      return res.status(401).json({ error: 'Senha incorreta' });
+    }
 
-// Rotas para diferentes endpoints
-app.use('/api/users', userRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/clubs', clubProfilesRoutes);
-app.use('/api/userPhotos', userPhotosRoutes);
-app.use('/api/userVideos', userVideosRoutes);
-app.use('/api/universities', universityProfilesRoutes);
-app.use('/api/scouts', scoutProfilesRoutes);
-app.use('/api/opportunities', opportunitiesRoutes);
-app.use('/api/events', eventsRoutes);
-app.use('/api/playerProfiles', playerProfilesRoutes);
+    // Consultar imagem de perfil, se existir
+    let profileImage = null;
+    if (user.profile_type === 'player') {
+      const profileImageQuery = 'SELECT profile_image FROM PlayerProfiles WHERE user_id = ?';
+      const [imageResult] = await promisePool.query(profileImageQuery, [user.id]);
+      profileImage = imageResult.length > 0 ? imageResult[0].profile_image : null;
+    }
 
-// Middleware para tratamento de erros
-app.use((err, req, res, next) => {
-  console.error('Erro:', err.message);
-  res.status(err.status || 500).json({
-    error: {
-      message: err.message || 'Internal Server Error',
-    },
+    const token = jwt.sign({ id: user.id, username: user.username, profile_type: user.profile_type }, JWT_SECRET, { expiresIn: '1h' });
+
+    res.status(200).json({
+      success: true,
+      token: token,
+      user: {
+        id: user.id,
+        username: user.username,
+        profile_type: user.profile_type,
+        profileImage: profileImage,
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao fazer login:', error);
+    res.status(500).json({ error: 'Erro ao fazer login' });
+  }
+};
+
+// Logout de Usuário
+export const logoutUser = (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Logout realizado com sucesso'
   });
-});
-
-const PORT = process.env.PORT || 7320;
-const server = http.createServer(app);
-
-server.listen(PORT, () => {
-  console.log(`Servidor está rodando na porta ${PORT}`);
-});
+};
