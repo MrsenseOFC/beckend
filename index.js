@@ -74,7 +74,11 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Servindo arquivos estáticos da pasta uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  setHeaders: (res, path) => {
+    res.setHeader('Cache-Control', 'public, max-age=31536000');
+  }
+}));
 
 // Middleware para adicionar headers de CORS nas respostas de arquivos estáticos
 app.use((req, res, next) => {
