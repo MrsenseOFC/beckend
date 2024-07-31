@@ -103,7 +103,7 @@ app.use(express.static(path.join(__dirname, '../Oficial/dist')));
 
 // Redireciona todas as outras requisições para o index.html
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, './dist', 'index.html'));
+  res.sendFile(path.join(__dirname, '../dist', 'index.html'));
 });
 
 // Middleware para tratamento de erros
