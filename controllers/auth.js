@@ -8,13 +8,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 export const registerUser = async (req, res) => {
   const { username, email, password, profile_type, competitive_category, competitive_level } = req.body;
 
-  // Verificação se todos os campos obrigatórios estão presentes
   if (!username || !email || !password || !profile_type || !competitive_category || !competitive_level) {
     return res.status(400).json({ error: 'Por favor, preencha todos os campos obrigatórios' });
   }
 
   try {
-    // Verificar se o email já está em uso
     const checkEmailQuery = 'SELECT * FROM Users WHERE email = ?';
     const [results] = await promisePool.query(checkEmailQuery, [email]);
 
@@ -22,19 +20,16 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ error: 'Email já está em uso' });
     }
 
-    // Geração de hash da senha
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Inserção do novo usuário no banco de dados
     const query = `
       INSERT INTO Users (username, email, password, profile_type, competitive_category, competitive_level)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
     const [userResult] = await promisePool.query(query, [username, email, hashedPassword, profile_type, competitive_category, competitive_level]);
 
-    const userId = userResult.insertId; // Obtém o ID do novo usuário inserido
+    const userId = userResult.insertId;
 
-    // Inserção do perfil do jogador na tabela PlayerProfiles
     if (profile_type === 'player') {
       const playerProfileQuery = `
         INSERT INTO PlayerProfiles (user_id, username, email, profile_image)
@@ -50,7 +45,6 @@ export const registerUser = async (req, res) => {
   }
 };
 
-
 // Login de Usuário
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
@@ -60,7 +54,7 @@ export const loginUser = async (req, res) => {
   }
 
   try {
-    const query = 'SELECT * FROM users WHERE email = ?';
+    const query = 'SELECT * FROM Users WHERE email = ?';
     const [result] = await promisePool.query(query, [email]);
 
     if (result.length === 0) {
@@ -74,7 +68,6 @@ export const loginUser = async (req, res) => {
       return res.status(401).json({ error: 'Senha incorreta' });
     }
 
-    // Consultar imagem de perfil, se existir
     let profileImage = null;
     if (user.profile_type === 'player') {
       const profileImageQuery = 'SELECT profile_image FROM PlayerProfiles WHERE user_id = ?';
