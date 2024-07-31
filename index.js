@@ -98,14 +98,6 @@ app.use('/api/opportunities', opportunitiesRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/playerProfiles', playerProfilesRoutes);
 
-// Servindo arquivos estáticos do build do React
-app.use(express.static(path.join(__dirname, '../Oficial/dist')));
-
-// Redireciona todas as outras requisições para o index.html
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../Oficial/dist', 'index.html'));
-});
-
 // Middleware para tratamento de erros
 app.use((err, req, res, next) => {
   console.error('Erro:', err.message);
