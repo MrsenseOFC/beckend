@@ -1,70 +1,105 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import promisePool from '../connect.js'; // Ajuste o caminho conforme necessário
 
-const AuthContext = createContext();
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
-export const useAuth = () => useContext(AuthContext);
+// Registro de Usuário
+export const registerUser = async (req, res) => {
+  const { username, email, password, profile_type, competitive_category, competitive_level } = req.body;
 
-export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Verificação se todos os campos obrigatórios estão presentes
+  if (!username || !email || !password || !profile_type || !competitive_category || !competitive_level) {
+    return res.status(400).json({ error: 'Por favor, preencha todos os campos obrigatórios' });
+  }
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    const token = localStorage.getItem('accessToken');
-    if (user && token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setCurrentUser(user);
-      fetchProfileImage(user.id);
-    } else {
-      setLoading(false);
+  try {
+    // Verificar se o email já está em uso
+    const checkEmailQuery = 'SELECT * FROM Users WHERE email = ?';
+    const [results] = await promisePool.query(checkEmailQuery, [email]);
+
+    if (results.length > 0) {
+      return res.status(400).json({ error: 'Email já está em uso' });
     }
-  }, []);
 
-  const fetchProfileImage = async (userId) => {
-    try {
-      const response = await axios.get(`https://talent2show.onrender.com/api/userPhotos/${userId}`);
-      if (response.data.profile_image) {
-        const updatedUser = {
-          ...currentUser,
-          profileImage: response.data.profile_image,
-        };
-        setCurrentUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+    // Geração de hash da senha
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Inserção do novo usuário no banco de dados
+    const query = `
+      INSERT INTO Users (username, email, password, profile_type, competitive_category, competitive_level)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    const [userResult] = await promisePool.query(query, [username, email, hashedPassword, profile_type, competitive_category, competitive_level]);
+
+    const userId = userResult.insertId; // Obtém o ID do novo usuário inserido
+
+    // Inserção do perfil do jogador na tabela PlayerProfiles
+    if (profile_type === 'player') {
+      const playerProfileQuery = `
+        INSERT INTO PlayerProfiles (user_id, username, email, profile_image)
+        VALUES (?, ?, ?, ?)
+      `;
+      await promisePool.query(playerProfileQuery, [userId, username, email, null]);
+    }
+
+    res.status(201).json({ message: 'Usuário registrado com sucesso' });
+  } catch (error) {
+    console.error('Erro ao registrar usuário:', error);
+    res.status(500).json({ error: 'Erro ao registrar usuário' });
+  }
+};
+
+
+// Login de Usuário
+export const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Por favor, preencha todos os campos obrigatórios' });
+  }
+
+  try {
+    const query = 'SELECT * FROM users WHERE email = ?';
+    const [result] = await promisePool.query(query, [email]);
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    const user = result[0];
+    const match = await bcrypt.compare(password, user.password);
+
+    if (!match) {
+      return res.status(401).json({ error: 'Senha incorreta' });
+    }
+
+    const profileImageQuery = 'SELECT profile_image FROM PlayerProfiles WHERE user_id = ?';
+    const [imageResult] = await promisePool.query(profileImageQuery, [user.id]);
+    const profileImage = imageResult.length > 0 ? imageResult[0].profile_image : null;
+
+    const token = jwt.sign({ id: user.id, username: user.username, profile_type: user.profile_type }, JWT_SECRET, { expiresIn: '1h' });
+
+    res.status(200).json({
+      success: true,
+      token: token,
+      user: {
+        id: user.id,
+        username: user.username,
+        profile_type: user.profile_type,
+        profileImage: profileImage,
       }
-    } catch (error) {
-      console.error('Erro ao carregar a imagem de perfil:', error.response ? error.response.data : error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    });
+  } catch (error) {
+    console.error('Erro ao fazer login:', error);
+    res.status(500).json({ error: 'Erro ao fazer login' });
+  }
+};
 
-  const login = async (email, password) => {
-    setLoading(true);
-    try {
-      const response = await axios.post('https://talent2show.onrender.com/api/auth/login', { email, password });
-      const { token, user } = response.data;
-      localStorage.setItem('accessToken', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setCurrentUser(user);
-      await fetchProfileImage(user.id);
-    } catch (error) {
-      console.error('Erro ao fazer login:', error.response ? error.response.data : error.message);
-      setLoading(false);
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('user');
-    delete axios.defaults.headers.common['Authorization'];
-    setCurrentUser(null);
-  };
-
-  return (
-    <AuthContext.Provider value={{ currentUser, login, logout, loading }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
+// Logout de Usuário
+export const logoutUser = (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Logout realizado com sucesso'
+  });
+};
