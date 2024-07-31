@@ -11,7 +11,7 @@ export const uploadProfilePicture = async (req, res) => {
     const [result] = await promisePool.query(query, [imageFile, userId]);
 
     if (result.affectedRows === 0) {
-      // Se não houver uma linha afetada, significa que o usuário não tem uma entrada, então criamos uma
+      // If no row was affected, insert a new entry
       const insertQuery = 'INSERT INTO ProfilePictures (user_id, profile_image) VALUES (?, ?)';
       await promisePool.query(insertQuery, [userId, imageFile]);
     }
