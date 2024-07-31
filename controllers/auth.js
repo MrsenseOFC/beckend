@@ -74,9 +74,13 @@ export const loginUser = async (req, res) => {
       return res.status(401).json({ error: 'Senha incorreta' });
     }
 
-    const profileImageQuery = 'SELECT profile_image FROM PlayerProfiles WHERE user_id = ?';
-    const [imageResult] = await promisePool.query(profileImageQuery, [user.id]);
-    const profileImage = imageResult.length > 0 ? imageResult[0].profile_image : null;
+    // Consultar imagem de perfil, se existir
+    let profileImage = null;
+    if (user.profile_type === 'player') {
+      const profileImageQuery = 'SELECT profile_image FROM PlayerProfiles WHERE user_id = ?';
+      const [imageResult] = await promisePool.query(profileImageQuery, [user.id]);
+      profileImage = imageResult.length > 0 ? imageResult[0].profile_image : null;
+    }
 
     const token = jwt.sign({ id: user.id, username: user.username, profile_type: user.profile_type }, JWT_SECRET, { expiresIn: '1h' });
 
