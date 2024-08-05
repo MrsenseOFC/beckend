@@ -8,13 +8,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 export const registerUser = async (req, res) => {
   const { username, email, password, profile_type, competitive_category, competitive_level } = req.body;
 
-  // Verifica se todos os campos obrigatórios estão preenchidos
   if (!username || !email || !password || !profile_type || !competitive_category || !competitive_level) {
     return res.status(400).json({ error: 'Por favor, preencha todos os campos obrigatórios' });
   }
 
   try {
-    // Verifica se o email já está em uso
     const checkEmailQuery = 'SELECT * FROM Users WHERE email = ?';
     const [results] = await promisePool.query(checkEmailQuery, [email]);
 
@@ -22,10 +20,8 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ error: 'Email já está em uso' });
     }
 
-    // Criptografa a senha antes de salvar no banco de dados
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insere o novo usuário na tabela Users
     const query = `
       INSERT INTO Users (username, email, password, profile_type, competitive_category, competitive_level)
       VALUES (?, ?, ?, ?, ?, ?)
@@ -34,13 +30,12 @@ export const registerUser = async (req, res) => {
 
     const userId = userResult.insertId;
 
-    // Se o tipo de perfil for 'player', cria um perfil de jogador
     if (profile_type === 'player') {
       const playerProfileQuery = `
-        INSERT INTO PlayerProfiles (user_id, best_leg, competitive_level, age_category, birth_date, age, main_position, profile_image)
-        VALUES (?, 'right', ?, 'sub20', CURDATE(), 20, 'forward', NULL)
+        INSERT INTO PlayerProfiles (user_id, username, email, profile_image)
+        VALUES (?, ?, ?, ?)
       `;
-      await promisePool.query(playerProfileQuery, [userId, competitive_level]);
+      await promisePool.query(playerProfileQuery, [userId, username, email, null]);
     }
 
     res.status(201).json({ message: 'Usuário registrado com sucesso' });
@@ -54,13 +49,11 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
-  // Verifica se todos os campos obrigatórios estão preenchidos
   if (!email || !password) {
     return res.status(400).json({ error: 'Por favor, preencha todos os campos obrigatórios' });
   }
 
   try {
-    // Consulta para encontrar o usuário pelo email
     const query = 'SELECT * FROM Users WHERE email = ?';
     const [result] = await promisePool.query(query, [email]);
 
@@ -71,20 +64,21 @@ export const loginUser = async (req, res) => {
     const user = result[0];
     const match = await bcrypt.compare(password, user.password);
 
-    // Verifica se a senha está correta
     if (!match) {
       return res.status(401).json({ error: 'Senha incorreta' });
     }
 
     let profileImage = null;
     if (user.profile_type === 'player') {
-      // Busca a imagem de perfil do jogador se o tipo de perfil for 'player'
-      const profileImageQuery = 'SELECT profile_image FROM PlayerProfiles WHERE user_id = ?';
-      const [imageResult] = await promisePool.query(profileImageQuery, [user.id]);
-      profileImage = imageResult.length > 0 ? imageResult[0].profile_image : null;
+      try {
+        const profileImageQuery = 'SELECT profile_image FROM PlayerProfiles WHERE user_id = ?';
+        const [imageResult] = await promisePool.query(profileImageQuery, [user.id]);
+        profileImage = imageResult.length > 0 ? imageResult[0].profile_image : null;
+      } catch (error) {
+        console.warn('Erro ao buscar imagem de perfil:', error.message);
+      }
     }
 
-    // Gera um token JWT para o usuário
     const token = jwt.sign({ id: user.id, username: user.username, profile_type: user.profile_type }, JWT_SECRET, { expiresIn: '1h' });
 
     res.status(200).json({
@@ -105,7 +99,6 @@ export const loginUser = async (req, res) => {
 
 // Logout de Usuário
 export const logoutUser = (req, res) => {
-  // Apenas uma resposta de logout, já que o JWT é armazenado no lado do cliente
   res.status(200).json({
     success: true,
     message: 'Logout realizado com sucesso'
