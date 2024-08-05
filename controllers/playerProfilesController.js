@@ -1,4 +1,6 @@
-import promisePool from '../connect.js';
+// src/controllers/playerProfilesController.js
+
+import promisePool from '../connect.js'; // Verifique o caminho do seu módulo de conexão com o banco de dados
 
 export const getPlayerProfile = async (req, res) => {
   const userId = req.params.userId;
