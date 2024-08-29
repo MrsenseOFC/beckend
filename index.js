@@ -8,10 +8,14 @@ import universityProfilesRoutes from './routes/universityProfiles.js';
 import scoutProfilesRoutes from './routes/scoutProfiles.js';
 import opportunitiesRoutes from './routes/opportunities.js';
 import eventsRoutes from './routes/events.js';
-import playerProfilesRoutes from './routes/playerProfiles.js';
+import playersRoutes from './routes/players.js'; // Adicionando a rota de jogadores
+import profileRoutes from './routes/profileRoutes.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
+import morgan from 'morgan';
 import http from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -21,21 +25,31 @@ import crypto from 'crypto';
 
 dotenv.config();
 
-// Para usar __dirname com ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const app = express();
-
-// Gerar JWT_SECRET automaticamente se não estiver definido no arquivo .env
 if (!process.env.JWT_SECRET) {
-  process.env.JWT_SECRET = crypto.randomBytes(64).toString('hex');
-  console.log(`Generated JWT_SECRET: ${process.env.JWT_SECRET}`);
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET não está definido nas variáveis de ambiente.');
+  } else {
+    process.env.JWT_SECRET = crypto.randomBytes(64).toString('hex');
+    console.log(`Generated JWT_SECRET: ${process.env.JWT_SECRET}`);
+  }
 }
 
-// Configuração do CORS para permitir a origem específica
+const app = express();
+
+app.use(compression());
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: 'Muitas requisições deste IP, por favor tente novamente mais tarde.',
+});
+app.use(limiter);
+
 const corsOptions = {
-  origin: 'https://talent2show-com-46dh.onrender.com', // Permitir esta origem
+  origin: 'talent2show-com-46dh.onrender.com',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -43,7 +57,6 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Middleware para segurança adicional
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -51,8 +64,8 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https://example.com"],
-      connectSrc: ["'self'", "https://talent2show-com-46dh.onrender.com"], // Permitir conexões da origem
-      fontSrc: ["'self'", "https://talent2show-com-46dh.onrender.com"],
+      connectSrc: ["'self'", "talent2show-com-46dh.onrender.com"],
+      fontSrc: ["'self'", "talent2show-com-46dh.onrender.com"],
       objectSrc: ["'none'"],
       frameSrc: ["'none'"],
     },
@@ -60,33 +73,12 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 
-// Middleware para configurar timeout
-app.use((req, res, next) => {
-  req.setTimeout(0);
-  res.setTimeout(0);
-  next();
-});
-
-// Middleware para analisar o corpo das solicitações como JSON
+app.use(morgan('combined'));
 app.use(express.json());
-
-// Middleware para analisar cookies
 app.use(cookieParser());
 
-// Servindo arquivos estáticos da pasta uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Middleware para adicionar headers de CORS nas respostas de arquivos estáticos
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://talent2show-com-46dh.onrender.com'); // Permitir esta origem
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
-  next();
-});
-
-// Rotas para diferentes endpoints
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/clubs', clubProfilesRoutes);
@@ -96,9 +88,9 @@ app.use('/api/universities', universityProfilesRoutes);
 app.use('/api/scouts', scoutProfilesRoutes);
 app.use('/api/opportunities', opportunitiesRoutes);
 app.use('/api/events', eventsRoutes);
-app.use('/api/playerProfiles', playerProfilesRoutes);
+app.use('/api/players', playersRoutes); // Usando a nova rota para jogadores
+app.use('/api/profile', profileRoutes);
 
-// Middleware para tratamento de erros
 app.use((err, req, res, next) => {
   console.error('Erro:', err.message);
   res.status(err.status || 500).json({

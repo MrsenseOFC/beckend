@@ -1,15 +1,25 @@
-import promisePool from '../connect.js'; // Ajuste o caminho conforme necessário
+import promisePool from '../connect.js';
+import { validationResult, query } from 'express-validator';
+
+// Middleware de validação para a rota
+export const validateUsername = [
+  query('username')
+    .notEmpty().withMessage('Nome de usuário é obrigatório')
+    .isAlphanumeric().withMessage('Nome de usuário deve conter apenas caracteres alfanuméricos')
+];
 
 // Função para buscar o perfil do jogador pelo nome de usuário
 export const getPlayerProfile = async (req, res) => {
-  const { username } = req.query;
-
-  if (!username) {
-    return res.status(400).json({ message: 'Nome de usuário é obrigatório' });
+  // Verificar se há erros de validação
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
   }
 
+  const { username } = req.query;
+
   try {
-    const query = 'SELECT * FROM player_profiles WHERE username = ?';
+    const query = 'SELECT * FROM PlayerProfiles WHERE username = ?';
     const [rows] = await promisePool.query(query, [username]);
 
     if (rows.length === 0) {

@@ -1,11 +1,9 @@
-// src/routes/playerProfiles.js
-
 import express from 'express';
-import { getPlayerProfile } from '../controllers/playerProfilesController.js'; // Verifique o caminho e o nome da função exportada
+import { getPlayerProfile, updatePlayerProfile } from '../controllers/playerProfilesController.js';
 
 const router = express.Router();
 
-// Endpoint para obter o perfil de um jogador específico pelo ID do usuário
-router.get('/:userId', getPlayerProfile);
+router.get('/:id', getPlayerProfile);
+router.put('/:id', updatePlayerProfile);
 
 export default router;

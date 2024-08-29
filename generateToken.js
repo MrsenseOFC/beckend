@@ -4,6 +4,10 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const generateToken = (user) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET não está definido nas variáveis de ambiente.');
+  }
+
   const token = jwt.sign(
     {
       id: user.id,
