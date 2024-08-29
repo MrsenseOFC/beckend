@@ -49,7 +49,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 const corsOptions = {
-  origin: 'talent2show-com-46dh.onrender.com',
+  origin: 'talent2show-com-46dh.onrender.com/',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
