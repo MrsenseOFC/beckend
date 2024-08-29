@@ -49,7 +49,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 const corsOptions = {
-  origin: 'talent2show-com-46dh.onrender.com/',
+  origin: 'https://talent2show-com-46dh.onrender.com',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -64,8 +64,8 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https://example.com"],
-      connectSrc: ["'self'", "talent2show-com-46dh.onrender.com"],
-      fontSrc: ["'self'", "talent2show-com-46dh.onrender.com"],
+      connectSrc: ["'self'", "https://talent2show-com-46dh.onrender.com"],
+      fontSrc: ["'self'", "https://talent2show-com-46dh.onrender.com"],
       objectSrc: ["'none'"],
       frameSrc: ["'none'"],
     },
