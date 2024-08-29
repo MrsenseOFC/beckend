@@ -77,21 +77,8 @@ app.use(morgan('combined'));
 app.use(express.json());
 app.use(cookieParser());
 
-// Servindo arquivos estáticos da pasta dist
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Verificação explícita de MIME types para arquivos JS e CSS
-app.get('*.js', (req, res, next) => {
-  res.setHeader('Content-Type', 'application/javascript');
-  next();
-});
-
-app.get('*.css', (req, res, next) => {
-  res.setHeader('Content-Type', 'text/css');
-  next();
-});
-
-// Roteamento da API
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/clubs', clubProfilesRoutes);
@@ -104,12 +91,6 @@ app.use('/api/events', eventsRoutes);
 app.use('/api/players', playersRoutes); // Usando a nova rota para jogadores
 app.use('/api/profile', profileRoutes);
 
-// Rota para servir o index.html do front-end para qualquer rota não definida (Single Page Application)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
-
-// Tratamento de erros
 app.use((err, req, res, next) => {
   console.error('Erro:', err.message);
   res.status(err.status || 500).json({
